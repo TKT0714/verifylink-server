@@ -2,35 +2,23 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>VerifyLink - ブランド別複数番号表示</title>
+    <title>VerifyLink - ゼロエミッション汎用モニター</title>
     <style>
         body { font-family: 'Meiryo UI', sans-serif; background: #dce6ff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         .header { background: #1e78dc; color: white; text-align: center; padding: 15px; font-size: 36px; font-weight: bold; position: relative; }
-        
-        /* ⚙️ 右上にコッソリ隠れるWeb設定ボタン */
         .config-btn { position: absolute; right: 20px; top: 20px; font-size: 16px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-        .config-panel { display: none; position: absolute; right: 20px; top: 60px; background: white; color: black; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; font-size: 16px; text-align: left; }
+        .config-panel { display: none; position: absolute; right: 20px; top: 60px; background: white; color: black; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; font-size: 16px; text-align: left; width: 280px; }
         .config-panel label { display: block; margin: 8px 0; cursor: pointer; }
-
-        /* 🏛️ ブランド別の列（カラム）を並べるメインコンテナ */
+        .config-panel select { width: 100%; padding: 5px; font-size: 16px; margin: 5px 0 15px 0; }
         .main-workspace { flex: 1; display: flex; gap: 15px; padding: 15px; overflow: hidden; }
-        
-        /* 各ブランドの縦長の欄 */
-        .brand-column { flex: 1; display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
-        .brand-title { text-align: center; font-size: 28px; font-weight: bold; color: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        
-        /* 🎨 ハードオフ＝青、ホビーオフ＝橙、オフハウス＝緑 */
+        .brand-column { flex: 1; display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; }
+        .brand-title { text-align: center; font-size: 28px; font-weight: bold; color: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
         .bg-hardoff { background: #0054B2; }
         .bg-hobbyoff { background: #EE7800; }
         .bg-offhouse { background: #009944; }
-
-        /* 番号カードがポコポコ並ぶエリア */
         .card-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; align-content: start; overflow-y: auto; }
-        
-        /* 番号カードのデザイン */
         .card { background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: bold; color: black; min-height: 110px; animation: popIn 0.25s ease-out; }
         .flash { background: #ff3b30 !important; color: white !important; }
-
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
     </style>
     <script src="/socket.io/socket.io.js"></script>
@@ -40,43 +28,40 @@
     <div class="header">
         査定が完了しました カウンターまでお越しください
         <button class="config-btn" onclick="toggleConfig()">⚙️ 画面表示設定</button>
+        
         <div id="configPanel" class="config-panel">
-            <strong>【表示するブランドを選択】</strong><hr>
-            <label><input type="checkbox" id="chkHard" checked onchange="updateLayout()"> HARD-OFF (ハードオフ)</label>
-            <label><input type="checkbox" id="chkHobby" checked onchange="updateLayout()"> HOBBY-OFF (ホビーオフ)</label>
-            <label><input type="checkbox" id="chkOff" checked onchange="updateLayout()"> OFF-HOUSE (オフハウス)</label>
+            <strong>【設置店舗の選択】</strong>
+            <select id="selStore" onchange="updateLayout()">
+                <option value="owada">八王子大和田店</option>
+                <option value="minamino">八王子みなみ野店</option>
+                <option value="hachioji_nishi">八王子西店</option>
+                <option value="tama_center">多摩センター店</option>
+                </select>
+
+            <strong>【表示ブランド】</strong><hr>
+            <label><input type="checkbox" id="chkHard" checked onchange="updateLayout()"> HARD-OFF</label>
+            <label><input type="checkbox" id="chkHobby" checked onchange="updateLayout()"> HOBBY-OFF</label>
+            <label><input type="checkbox" id="chkOff" checked onchange="updateLayout()"> OFF-HOUSE</label>
             <button style="margin-top:10px; width:100%;" onclick="toggleConfig()">設定を閉じる</button>
         </div>
     </div>
 
     <div class="main-workspace">
-        <div id="col-hardoff" class="brand-column">
-            <div class="brand-title bg-hardoff">HARD-OFF</div>
-            <div id="grid-hardoff" class="card-grid"></div>
-        </div>
-
-        <div id="col-hobbyoff" class="brand-column">
-            <div class="brand-title bg-hobbyoff">HOBBY-OFF</div>
-            <div id="grid-hobbyoff" class="card-grid"></div>
-        </div>
-
-        <div id="col-offhouse" class="brand-column">
-            <div class="brand-title bg-offhouse">OFF-HOUSE</div>
-            <div id="grid-offhouse" class="card-grid"></div>
-        </div>
+        <div id="col-hardoff" class="brand-column"><div class="brand-title bg-hardoff">HARD-OFF</div><div id="grid-hardoff" class="card-grid"></div></div>
+        <div id="col-hobbyoff" class="brand-column"><div class="brand-title bg-hobbyoff">HOBBY-OFF</div><div id="grid-hobbyoff" class="card-grid"></div></div>
+        <div id="col-offhouse" class="brand-column"><div class="brand-title bg-offhouse">OFF-HOUSE</div><div id="grid-offhouse" class="card-grid"></div></div>
     </div>
 
     <script>
         const socket = io();
 
-        // 設定画面の開け閉め
         function toggleConfig() {
             const panel = document.getElementById('configPanel');
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
 
-        // 🛠️ チェックボックスに合わせて、表示する欄の数を「1枠」「2枠」「3枠」に自動変形させる回路
         function updateLayout() {
+            const storeId = document.getElementById('selStore').value;
             const showHard = document.getElementById('chkHard').checked;
             const showHobby = document.getElementById('chkHobby').checked;
             const showOff = document.getElementById('chkOff').checked;
@@ -85,63 +70,57 @@
             document.getElementById('col-hobbyoff').style.display = showHobby ? 'flex' : 'none';
             document.getElementById('col-offhouse').style.display = showOff ? 'flex' : 'none';
 
-            // 設定をブラウザの記憶回路（LocalStorage）にハンダ付けして保存
-            localStorage.setItem('display_config', JSON.stringify({showHard, showHobby, showOff}));
+            localStorage.setItem('display_config_v2', JSON.stringify({storeId, showHard, showHobby, showOff}));
         }
 
-        // 起動時に前回の表示設定をロード
-        const savedConfig = localStorage.getItem('display_config');
+        // 記憶回路ロード
+        const savedConfig = localStorage.getItem('display_config_v2');
         if (savedConfig) {
             const conf = JSON.parse(savedConfig);
+            document.getElementById('selStore').value = conf.storeId;
             document.getElementById('chkHard').checked = conf.showHard;
             document.getElementById('chkHobby').checked = conf.showHobby;
             document.getElementById('chkOff').checked = conf.showOff;
             updateLayout();
         }
 
-        // 🌟 MAUIからデータが飛んできたときの自動振り分け回路
+        // 🌟 命令受信時の防壁・振り分け回路
         socket.on('receive_number', (data) => {
+            const currentStoreId = document.getElementById('selStore').value;
+
+            // 🛑 【超重要】MAUIから来た店舗IDが、このモニターの設定と違ったら即座にスルーする回路！
+            if (data.storeId !== currentStoreId) {
+                return; 
+            }
+
             const cardId = `card-${data.number}`;
             const existingCard = document.getElementById(cardId);
 
             if (data.flag === "0") {
-                // ⭕ 【追加命令】
                 if (!existingCard) {
-                    // MAUIから送られてきたモード名（館名）を読み取る
                     const mode = data.satei || ""; 
-                    let targetGridId = "grid-hardoff"; // デフォルトはハードオフ
+                    let targetGridId = "grid-hardoff";
 
-                    if (mode.includes("ホビーオフ")) {
-                        targetGridId = "grid-hobbyoff";
-                    } else if (mode.includes("オフハウス")) {
-                        targetGridId = "grid-offhouse";
-                    }
+                    if (mode.includes("ホビーオフ")) targetGridId = "grid-hobbyoff";
+                    else if (mode.includes("オフハウス")) targetGridId = "grid-offhouse";
 
-                    // 正しいブランドの欄へカードを錬成して配置
                     const targetGrid = document.getElementById(targetGridId);
                     if (targetGrid) {
                         const card = document.createElement('div');
-                        card.id = cardId;
-                        card.className = 'card';
-                        card.innerText = data.number;
-                        
+                        card.id = cardId; card.className = 'card'; card.innerText = data.number;
                         targetGrid.appendChild(card);
                         flashEffect(card);
                     }
                 }
-            } else if (data.flag === "1") {
-                // ❌ 【削除命令】ブランドに関係なく一撃で画面から消滅させる
-                if (existingCard) {
-                    existingCard.remove();
-                }
+            } else if (data.flag === "1" && existingCard) {
+                existingCard.remove();
             }
         });
 
         function flashEffect(element) {
             let count = 0;
             const interval = setInterval(() => {
-                element.classList.toggle('flash');
-                count++;
+                element.classList.toggle('flash'); count++;
                 if (count >= 10) { clearInterval(interval); element.classList.remove('flash'); }
             }, 300);
         }
