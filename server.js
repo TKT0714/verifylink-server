@@ -9,6 +9,7 @@ app.use(express.static('public'));
 
 // 🌟 MAUI（VerifyLink Connect）からのPOSTを受け止める窓口
 app.post('/api/call', (req, res) => {
+    const storeId = req.body.storeId;
     const num = req.body.number;
     const flag = req.body.flag;   // "0" = 追加, "1" = 削除
     const satei = req.body.satei; // 館名（"PC館" など）
