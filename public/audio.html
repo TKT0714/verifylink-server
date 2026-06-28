@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>VerifyLink - 音声受信機</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #222; color: #fff; padding-top: 100px; }
+        .status { font-size: 20px; color: #4cd964; }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <h2>VerifyLink 音声読み上げレシーバー</h2>
+    <p>このページを開いたまま、スピーカーをオンにしておいてくださいザます。</p>
+    <p class="status">● サーバー通信監視中...</p>
+
+    <script>
+        const socket = io();
+
+        socket.on('receive_number', (data) => {
+            const text = `お待たせいたしました。受取番号、${data.number}番のお客様、買取カウンターまでお越しください。`;
+            
+            const uttr = new SpeechSynthesisUtterance(text);
+            uttr.lang = 'ja-JP';
+            uttr.rate = 1.1;  // 喋る速度
+            uttr.pitch = 1.2; // 声の高さ（ちょっと高めで聞き取りやすく）
+
+            window.speechSynthesis.speak(uttr);
+        });
+    </script>
+</body>
+</html>

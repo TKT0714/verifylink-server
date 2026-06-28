@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>VerifyLink - 番号表示</title>
+    <style>
+        body { font-family: sans-serif; background: #dce6ff; margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { background: #1e78dc; color: white; text-align: center; padding: 20px; font-size: 40px; font-weight: bold; }
+        .main { flex: 1; display: flex; justify-content: center; align-items: center; }
+        .card { background: white; border: 8px solid white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 10px; width: 80%; height: 70%; display: flex; justify-content: center; align-items: center; font-size: 180px; font-weight: bold; color: black; transition: background 0.3s; }
+        .flash { background: #ff3b30 !important; color: white !important; }
+    </style>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="header">査定が完了しました カウンターまでお越しください</div>
+    <div class="main">
+        <div id="numberCard" class="card">---</div>
+    </div>
+
+    <script>
+        const socket = io();
+        const card = document.getElementById('numberCard');
+
+        socket.on('receive_number', (data) => {
+            card.innerText = data.number + " 番";
+            flashEffect();
+        });
+
+        function flashEffect() {
+            let count = 0;
+            const interval = setInterval(() => {
+                card.classList.toggle('flash');
+                count++;
+                if (count >= 10) {
+                    clearInterval(interval);
+                    card.classList.remove('flash');
+                }
+            }, 300);
+        }
+    </script>
+</body>
+</html>
