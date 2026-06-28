@@ -7,18 +7,23 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
+// 🌟 MAUI（VerifyLink Connect）からのPOSTを受け止める窓口
 app.post('/api/call', (req, res) => {
     const num = req.body.number;
-    console.log(`【MAUIから受信】 番号: ${num}`);
+    const flag = req.body.flag;   // "0" = 追加, "1" = 削除
+    const satei = req.body.satei; // 館名（"PC館" など）
+
+    console.log(`【MAUI受信】 番号: ${num}, 状態: ${flag}, 館名: ${satei}`);
 
     if (num) {
-        io.emit('receive_number', { number: num });
-        return res.status(200).json({ success: true, message: "送信完了ザます" });
+        // 表示画面と音声画面へ、フラグや館名もセットで一斉拡声！
+        io.emit('receive_number', { number: num, flag: flag, satei: satei });
+        return res.status(200).json({ success: true });
     }
-    return res.status(400).json({ success: false, message: "番号がありません" });
+    return res.status(400).json({ success: false });
 });
 
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
-    console.log(`VerifyLink Webサーバーがポート ${PORT} で起動したザます！`);
+    console.log(`Server running on port ${PORT}`);
 });
