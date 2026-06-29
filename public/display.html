@@ -10,12 +10,18 @@
         .config-panel { display: none; position: absolute; right: 20px; top: 60px; background: white; color: black; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 9999; font-size: 16px; text-align: left; width: 280px; }
         .config-panel label { display: block; margin: 8px 0; cursor: pointer; }
         .config-panel select { width: 100%; padding: 5px; font-size: 16px; margin: 5px 0 15px 0; }
+        
         .main-workspace { flex: 1; display: flex; gap: 15px; padding: 15px; overflow: hidden; }
         .brand-column { flex: 1; display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.6); border-radius: 15px; padding: 15px; }
-        .brand-title { text-align: center; font-size: 28px; font-weight: bold; color: white; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        
+        /* 🎨 ロゴを中央に、きれいに収めるための看板ヘッダー */
+        .brand-header { display: flex; justify-content: center; align-items: center; padding: 10px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); height: 60px; }
+        .brand-logo { max-width: 90%; max-height: 50px; object-fit: contain; }
+
         .bg-hardoff { background: #0054B2; }
         .bg-hobbyoff { background: #EE7800; }
         .bg-offhouse { background: #009944; }
+        
         .card-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; align-content: start; overflow-y: auto; }
         .card { background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; justify-content: center; align-items: center; font-size: 60px; font-weight: bold; color: black; min-height: 110px; animation: popIn 0.25s ease-out; }
         .flash { background: #ff3b30 !important; color: white !important; }
@@ -36,7 +42,7 @@
                 <option value="minamino">八王子みなみ野店</option>
                 <option value="hachioji_nishi">八王子西店</option>
                 <option value="tama_center">多摩センター店</option>
-                </select>
+            </select>
 
             <strong>【表示ブランド】</strong><hr>
             <label><input type="checkbox" id="chkHard" checked onchange="updateLayout()"> HARD-OFF</label>
@@ -47,9 +53,26 @@
     </div>
 
     <div class="main-workspace">
-        <div id="col-hardoff" class="brand-column"><div class="brand-title bg-hardoff">HARD-OFF</div><div id="grid-hardoff" class="card-grid"></div></div>
-        <div id="col-hobbyoff" class="brand-column"><div class="brand-title bg-hobbyoff">HOBBY-OFF</div><div id="grid-hobbyoff" class="card-grid"></div></div>
-        <div id="col-offhouse" class="brand-column"><div class="brand-title bg-offhouse">OFF-HOUSE</div><div id="grid-offhouse" class="card-grid"></div></div>
+        <div id="col-hardoff" class="brand-column">
+            <div class="brand-header bg-hardoff">
+                <img src="hardoff-logo.png" alt="HARD-OFF" class="brand-logo">
+            </div>
+            <div id="grid-hardoff" class="card-grid"></div>
+        </div>
+
+        <div id="col-hobbyoff" class="brand-column">
+            <div class="brand-header bg-hobbyoff">
+                <img src="hobbyoff-logo.png" alt="HOBBY-OFF" class="brand-logo">
+            </div>
+            <div id="grid-hobbyoff" class="card-grid"></div>
+        </div>
+
+        <div id="col-offhouse" class="brand-column">
+            <div class="brand-header bg-offhouse">
+                <img src="offhouse-logo.png" alt="OFF-HOUSE" class="brand-logo">
+            </div>
+            <div id="grid-offhouse" class="card-grid"></div>
+        </div>
     </div>
 
     <script>
@@ -73,7 +96,6 @@
             localStorage.setItem('display_config_v2', JSON.stringify({storeId, showHard, showHobby, showOff}));
         }
 
-        // 記憶回路ロード
         const savedConfig = localStorage.getItem('display_config_v2');
         if (savedConfig) {
             const conf = JSON.parse(savedConfig);
@@ -84,14 +106,9 @@
             updateLayout();
         }
 
-        // 🌟 命令受信時の防壁・振り分け回路
         socket.on('receive_number', (data) => {
             const currentStoreId = document.getElementById('selStore').value;
-
-            // 🛑 【超重要】MAUIから来た店舗IDが、このモニターの設定と違ったら即座にスルーする回路！
-            if (data.storeId !== currentStoreId) {
-                return; 
-            }
+            if (data.storeId !== currentStoreId) return; 
 
             const cardId = `card-${data.number}`;
             const existingCard = document.getElementById(cardId);
